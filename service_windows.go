@@ -16,6 +16,8 @@ import (
 	"golang.org/x/sys/windows/svc"
 	"golang.org/x/sys/windows/svc/eventlog"
 	"golang.org/x/sys/windows/svc/mgr"
+	"golang.org/x/sys/windows"
+	"syscall"
 )
 
 const version = "windows-service"
@@ -336,6 +338,10 @@ func (ws *windowsService) Status() (uint32, error) {
 
 	s, err := m.OpenService(ws.Name)
 	if err != nil {
+		lastErr := windows.GetLastError()
+		if lastErr == syscall.Errno(SERVICE_NOT_INSTALLED) {
+			return SERVICE_NOT_INSTALLED, nil
+		}
 		return SERVICE_ERROR, err
 	}
 	defer s.Close()
