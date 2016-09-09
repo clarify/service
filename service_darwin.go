@@ -204,6 +204,10 @@ func (s *darwinLaunchdService) Run() error {
 
 	return s.i.Stop(s)
 }
+func (s *darwinLaunchdService) Status() (uint32, error) {
+	//Unimplemented
+	return 0, nil
+}
 
 func (s *darwinLaunchdService) Logger(errs chan<- error) (Logger, error) {
 	if interactive {

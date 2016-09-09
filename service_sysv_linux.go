@@ -153,6 +153,11 @@ func (s *sysv) Restart() error {
 	return s.Start()
 }
 
+func (s *sysv) Status() (uint32, error) {
+	//Unimplemented
+	return 0, nil
+}
+
 const sysvScript = `#!/bin/sh
 # For RedHat and cousins:
 # chkconfig: - 99 01

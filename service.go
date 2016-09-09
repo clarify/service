@@ -84,6 +84,18 @@ const (
 	optionPIDFile      = "PIDFile"
 )
 
+const (
+	SERVICE_STOPPED          = 1
+	SERVICE_START_PENDING    = 2
+	SERVICE_STOP_PENDING     = 3
+	SERVICE_RUNNING          = 4
+	SERVICE_CONTINUE_PENDING = 5
+	SERVICE_PAUSE_PENDING    = 6
+	SERVICE_PAUSED           = 7
+	SERVICE_NOT_INSTALLED uint32 = 1060
+	SERVICE_ERROR uint32 = 0x00000000
+)
+
 // Config provides the setup for a Service. The Name field is required.
 type Config struct {
 	Name        string   // Required name of the service. No spaces suggested.
@@ -332,6 +344,9 @@ type Service interface {
 	// String displays the name of the service. The display name if present,
 	// otherwise the name.
 	String() string
+
+	// Returns service status
+	Status() (uint32, error)
 }
 
 // ControlAction list valid string texts to use in Control.
