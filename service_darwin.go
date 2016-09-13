@@ -14,6 +14,9 @@ import (
 	"syscall"
 	"text/template"
 	"time"
+	"os/exec"
+	"strconv"
+	"strings"
 )
 
 const maxPathSize = 32 * 1024
@@ -205,8 +208,29 @@ func (s *darwinLaunchdService) Run() error {
 	return s.i.Stop(s)
 }
 func (s *darwinLaunchdService) Status() (uint32, error) {
-	//Unimplemented
-	return 0, nil
+	confPath, err := s.getServiceFilePath()
+	if err != nil {
+		return SERVICE_ERROR, err
+	}
+
+	if _, err = os.Stat(confPath); os.IsNotExist(err) {
+		return SERVICE_NOT_INSTALLED, nil
+	}
+
+	cmd := exec.Command("sh", "-c", "launchctl list | grep -sw '" + s.Name + "' | awk '{print $1}'")
+	out, err := cmd.CombinedOutput()
+	if len(out) == 0 {
+		return SERVICE_STOPPED, nil
+	}
+
+	pid, err := strconv.ParseInt(strings.TrimSpace(string(out)), 10, 64)
+	if err != nil {
+		return SERVICE_STOPPED, nil
+	} else if pid > 0 {
+		return SERVICE_RUNNING, nil
+	}
+
+	return SERVICE_ERROR, nil
 }
 
 func (s *darwinLaunchdService) Logger(errs chan<- error) (Logger, error) {
