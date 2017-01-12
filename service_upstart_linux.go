@@ -11,7 +11,11 @@ import (
 	"os/signal"
 	"text/template"
 	"time"
+	upstartmgr "github.com/vektra/tachyon/upstart"
 )
+
+var startState map[string]uint32
+var stopState  map[string]uint32
 
 func isUpstart() bool {
 	if _, err := os.Stat("/sbin/upstart-udev-bridge"); err == nil {
@@ -29,6 +33,20 @@ func newUpstartService(i Interface, c *Config) (Service, error) {
 	s := &upstart{
 		i:      i,
 		Config: c,
+	}
+
+	startState = map[string]uint32{
+		"running":    SERVICE_RUNNING,
+		"starting":   SERVICE_START_PENDING,
+		"pre-start":  SERVICE_START_PENDING,
+		"post-start": SERVICE_START_PENDING,
+	}
+
+	stopState = map[string]uint32{
+		"waiting":   SERVICE_STOPPED,
+		"stopping":  SERVICE_STOP_PENDING,
+		"pre-stop":  SERVICE_STOP_PENDING,
+		"post-stop": SERVICE_STOP_PENDING,
 	}
 
 	return s, nil
@@ -141,6 +159,67 @@ func (s *upstart) Restart() error {
 	}
 	time.Sleep(50 * time.Millisecond)
 	return s.Start()
+}
+
+func (s *upstart) Status() (uint32, error) {
+	confPath, err := s.configPath()
+	if err != nil {
+		return SERVICE_ERROR, err
+	}
+
+	if _, err := os.Stat(confPath); os.IsNotExist(err) {
+		return SERVICE_NOT_INSTALLED, nil
+	}
+
+	conn, err := upstartmgr.Dial()
+	if err != nil {
+		return SERVICE_ERROR, fmt.Errorf("Upstart dial error %s", err.Error())
+	}
+	//defer conn.Close()
+
+	j, err := conn.Job(s.Name)
+	if err != nil {
+		return SERVICE_ERROR, fmt.Errorf("Upstart job error %s", err.Error())
+	}
+
+	is, err := j.Instances()
+	if err != nil {
+		return SERVICE_ERROR, fmt.Errorf("Upstart instances error %s", err.Error())
+	}
+
+	if is == nil || len(is) == 0 {
+		return SERVICE_STOPPED, nil
+	}
+
+	state, err := is[0].State()
+	if err != nil {
+		return SERVICE_ERROR, fmt.Errorf("Instances state error %s", err.Error())
+	}
+
+	goal, err := is[0].Goal()
+	if err != nil {
+		return SERVICE_ERROR, fmt.Errorf("Instance goal error %s", err.Error())
+	}
+
+	switch goal {
+	case "start":
+		s, found := startState[state]
+		if found {
+			return s, nil
+		} else {
+			return SERVICE_RUNNING, nil
+		}
+
+	case "stop":
+		s, found := stopState[state]
+		if found {
+			return s, nil
+		} else {
+			return SERVICE_STOPPED, nil
+		}
+	}
+
+	return SERVICE_ERROR, nil
 }
 
 // The upstart script should stop with an INT or the Go runtime will terminate
