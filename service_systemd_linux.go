@@ -202,7 +202,7 @@ func (s *systemd) Status() (uint32, error) {
 		switch active {
 		case "active":
 			// rinning, exited. Not documented part.
-			if sub == "rinning" {
+			if sub == "running" {
 				return SERVICE_RUNNING, nil
 			} else if sub == "exited" {
 				return SERVICE_STOPPED, nil
