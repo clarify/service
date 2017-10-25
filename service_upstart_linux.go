@@ -8,7 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
+	"strings"
 	"text/template"
 	"time"
 	upstartmgr "github.com/vektra/tachyon/upstart"
@@ -20,6 +22,13 @@ var stopState  map[string]uint32
 func isUpstart() bool {
 	if _, err := os.Stat("/sbin/upstart-udev-bridge"); err == nil {
 		return true
+	}
+	if _, err := os.Stat("/sbin/init"); err == nil {
+		if out, err := exec.Command("/sbin/init", "--version").Output(); err == nil {
+			if strings.Contains(string(out), "init (upstart") {
+				return true
+			}
+		}
 	}
 	return false
 }
