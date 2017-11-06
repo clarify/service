@@ -109,15 +109,15 @@ func (s *systemd) Install() error {
 		return err
 	}
 
-	err = run("sudo systemctl", "enable", s.Name+".service")
+	err = run("sudo", "systemctl", "enable", s.Name+".service")
 	if err != nil {
 		return err
 	}
-	return run("sudo systemctl", "daemon-reload")
+	return run("sudo", "systemctl", "daemon-reload")
 }
 
 func (s *systemd) Uninstall() error {
-	err := run("sudo systemctl", "disable", s.Name+".service")
+	err := run("sudo", "systemctl", "disable", s.Name+".service")
 	if err != nil {
 		return err
 	}
@@ -157,15 +157,15 @@ func (s *systemd) Run() (err error) {
 }
 
 func (s *systemd) Start() error {
-	return run("sudo systemctl", "start", s.Name+".service")
+	return run("sudo", "systemctl", "start", s.Name+".service")
 }
 
 func (s *systemd) Stop() error {
-	return run("sudo systemctl", "stop", s.Name+".service")
+	return run("sudo", "systemctl", "stop", s.Name+".service")
 }
 
 func (s *systemd) Restart() error {
-	return run("sudo systemctl", "restart", s.Name+".service")
+	return run("sudo", "systemctl", "restart", s.Name+".service")
 }
 
 func (s *systemd) Status() (uint32, error) {
