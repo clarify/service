@@ -13,6 +13,7 @@ import (
 	"os/signal"
 	"os/user"
 	"syscall"
+	"github.com/guelfey/go.dbus"
 	"text/template"
 )
 
