@@ -5,16 +5,15 @@
 package service
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
 	"os/user"
-	"os/exec"
 	"syscall"
 	"text/template"
-	"github.com/guelfey/go.dbus"
-	"bytes"
 )
 
 func isSystemd() bool {
@@ -109,15 +108,15 @@ func (s *systemd) Install() error {
 		return err
 	}
 
-	err = run("systemctl", "enable", s.Name+".service")
+	err = run("sudo systemctl", "enable", s.Name+".service")
 	if err != nil {
 		return err
 	}
-	return run("systemctl", "daemon-reload")
+	return run("sudo systemctl", "daemon-reload")
 }
 
 func (s *systemd) Uninstall() error {
-	err := run("systemctl", "disable", s.Name+".service")
+	err := run("sudo systemctl", "disable", s.Name+".service")
 	if err != nil {
 		return err
 	}
@@ -157,15 +156,15 @@ func (s *systemd) Run() (err error) {
 }
 
 func (s *systemd) Start() error {
-	return run("systemctl", "start", s.Name+".service")
+	return run("sudo systemctl", "start", s.Name+".service")
 }
 
 func (s *systemd) Stop() error {
-	return run("systemctl", "stop", s.Name+".service")
+	return run("sudo systemctl", "stop", s.Name+".service")
 }
 
 func (s *systemd) Restart() error {
-	return run("systemctl", "restart", s.Name+".service")
+	return run("sudo systemctl", "restart", s.Name+".service")
 }
 
 func (s *systemd) Status() (uint32, error) {
@@ -224,7 +223,7 @@ func (s *systemd) Status() (uint32, error) {
 		return SERVICE_ERROR, fmt.Errorf("Service %s is marked as masked", s.Name)
 	}
 
-	return SERVICE_ERROR,  fmt.Errorf("Couldn't get service state")
+	return SERVICE_ERROR, fmt.Errorf("Couldn't get service state")
 }
 
 func userAndHome() (string, string, error) {
